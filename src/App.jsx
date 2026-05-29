@@ -1,95 +1,81 @@
-import { useState, useEffect } from 'react';
-import './App.css';
+import { useState } from 'react';
+import './index.css';
+import Header from './Header';
+import TaskForm from './TaskForm';
+import FilterTabs from './FilterTabs';
+import TaskItem from './TaskItem';
+import EmptyState from './EmptyState';
 
-function App() {
-  // Inisialisasi state langsung membaca dari localStorage agar tidak bentrok tipe data
-  const [tasks, setTasks] = useState(() => {
-    const savedTasks = localStorage.getItem('tasks');
-    if (savedTasks) {
-      try {
-        const parsedTasks = JSON.parse(savedTasks);
-        if (Array.isArray(parsedTasks)) return parsedTasks;
-      } catch (error) {
-        console.error("Data rusak:", error);
-      }
-    }
-    return []; // Kembali ke array kosong jika data tidak ada atau rusak
+const initialTasks = [
+  { id: 1, text: 'Selesaikan modul React State', category: 'Edukasi', completed: true },
+  { id: 2, text: 'Review code presentasi project', category: 'Kerja', completed: false }
+];
+
+const App = () => {
+  // ── STATE ──────────────────────────────────────────────
+  const [tasks, setTasks] = useState(initialTasks);
+  const [filter, setFilter] = useState('Semua');
+
+  // ── DERIVED DATA (Kalkulasi Stat & Filter) ─────────────
+  const filteredTasks = tasks.filter((task) => {
+    if (filter === 'Aktif') return !task.completed;
+    if (filter === 'Selesai') return task.completed;
+    return true;
   });
 
-  // Simpan data ke localStorage setiap kali ada perubahan pada state tasks
-  useEffect(() => {
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-  }, [tasks]);
-
-  const addTask = () => {
-    if (input.trim() === '') return;
-    
-    setTasks(prevTasks => [...prevTasks, {
-      id: Date.now(),
-      text: input,
-      done: false
-    }]);
-    setInput('');
+  const stats = {
+    total: tasks.length,
+    selesai: tasks.filter((t) => t.completed).length,
+    aktif: tasks.filter((t) => !t.completed).length,
   };
 
-  const toggleTask = (id) => {
-    setTasks(prevTasks =>
-      prevTasks.map(task =>
-        task.id === id ? { ...task, done: !task.done } : task
+  // ── HANDLERS (Immutability Murni) ─────────────────────
+  const handleAddTask = (text, category) => {
+    const newTask = {
+      id: Date.now(),
+      text: text,
+      category: category,
+      completed: false,
+    };
+    setTasks((prevTasks) => [...prevTasks, newTask]);
+  };
+
+  const handleDeleteTask = (id) => {
+    setTasks((prevTasks) => prevTasks.filter((task) => task.id !== id));
+  };
+
+  const handleToggleTask = (id) => {
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.id === id ? { ...task, completed: !task.completed } : task
       )
     );
   };
 
-  const deleteTask = (id) => {
-    setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
-  };
-
-  const [input, setInput] = useState('');
-
   return (
-    <div className="app">
-      <div className="container">
-        <h1>✅ To-Do List</h1>
-        <p className="subtitle">Catatan Tugas Harian Siswa</p>
-
-        <div className="input-area">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && addTask()}
-            placeholder="Masukkan tugas baru..."
-          />
-          <button onClick={addTask}>Tambah</button>
-        </div>
-
-        <div className="task-list">
-          {tasks.map((task) => (
-            <div key={task.id} className="task-item">
-              <input
-                type="checkbox"
-                checked={task.done}
-                onChange={() => toggleTask(task.id)}
+    <div>
+      <Header stats={stats} />
+      <main className="container">
+        <TaskForm onAddTask={handleAddTask} />
+        <FilterTabs activeFilter={filter} onFilterChange={setFilter} stats={stats} />
+        
+        {filteredTasks.length === 0 ? (
+          <EmptyState activeFilter={filter} />
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {filteredTasks.map((task) => (
+              <TaskItem
+                key={task.id}
+                task={task}
+                onToggle={handleToggleTask}
+                onDelete={handleDeleteTask}
               />
-              <span className={task.done ? 'done' : ''}>
-                {task.text}
-              </span>
-              <button 
-                onClick={() => deleteTask(task.id)} 
-                className="delete-btn"
-              >
-                Hapus
-              </button>
-            </div>
-          ))}
-        </div>
-
-        {tasks.length === 0 && (
-          <p className="empty">Belum ada tugas. Tambahkan sekarang!</p>
+            ))}
+          </div>
         )}
-      </div>
+      </main>
     </div>
   );
-}
+};
 
 export default App;

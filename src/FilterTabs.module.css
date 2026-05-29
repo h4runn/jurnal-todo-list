@@ -1,0 +1,36 @@
+.tabsWrapper {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.tabBtn {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748b;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.tabBtn:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.active {
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.active:hover {
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  color: #ffffff;
+  opacity: 0.9;
+}
